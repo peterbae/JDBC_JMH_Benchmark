@@ -29,7 +29,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sample;
+package src;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
