@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>com.microsoft.sqlserver</groupId>
+  <artifactId>mssql-jdbc</artifactId>
+  <versioning>
+    <release>8.1.1.jre13-preview-calToZDT</release>
+    <versions>
+      <version>8.1.1.jre13-preview</version>
+      <version>8.1.1.jre13-preview-calToZDT</version>
+    </versions>
+    <lastUpdated>20191101214205</lastUpdated>
+  </versioning>
+</metadata>
