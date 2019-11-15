@@ -64,7 +64,10 @@ public class MyBenchmark {
     // Run using "mvn clean install" into "java -jar target/benchmarks.jar"
     private static java.sql.Timestamp ts = Timestamp.valueOf("1581-9-24 15:07:09.081");
     private static java.sql.Timestamp ts2 = Timestamp.valueOf("2019-9-24 15:07:09.081");
+    private static java.sql.Timestamp ts3 = Timestamp.valueOf("2004-04-06 02:00:00.0");
     private static DateTimeOffset dto = DateTimeOffset.valueOf(ts, 75);
+    private static String timezone = "Pacific/Honolulu";
+    private static Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(timezone));
     private static long tsTimeMillis = ts.getTime();
 
     private static int year = 2000;
@@ -77,28 +80,35 @@ public class MyBenchmark {
 
     private static Connection conn;
     private static SQLServerStatement st;
-    private static SQLServerPreparedStatement psCast;
-    private static SQLServerPreparedStatement psCast2;
+    private static SQLServerPreparedStatement psCastDTO;
+    private static SQLServerPreparedStatement psCastDTO2;
+    private static SQLServerPreparedStatement psCastDateTime2;
     private static SQLServerPreparedStatement psTable;
-    private static SQLServerResultSet rs;
-    private static SQLServerResultSet rs2;
+    private static SQLServerResultSet rsDTO;
+    private static SQLServerResultSet rsDTO2;
+    private static SQLServerResultSet rsDateTime2;
 
     static {
         try {
             conn = DriverManager.getConnection(connectionUrl + ";sendTimeAsDatetime=true");
             st = (SQLServerStatement) conn.createStatement();
             st.execute("CREATE TABLE #tmp (dt datetime2)");
-            psCast = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIMEOFFSET)");
-            psCast2 = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIMEOFFSET)");
+            psCastDTO = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIMEOFFSET)");
+            psCastDTO2 = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIMEOFFSET)");
+            psCastDateTime2 = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIME2)");
             
-            psCast.setTimestamp(1, ts);
-            rs = (SQLServerResultSet) psCast.executeQuery();
+            psCastDTO.setTimestamp(1, ts);
+            rsDTO = (SQLServerResultSet) psCastDTO.executeQuery();
             
-            psCast2.setTimestamp(1, ts2);
-            rs2 = (SQLServerResultSet) psCast2.executeQuery();
+            psCastDTO2.setTimestamp(1, ts2);
+            rsDTO2 = (SQLServerResultSet) psCastDTO2.executeQuery();
             
-            rs.next();
-            rs2.next();
+            psCastDateTime2.setTimestamp(1, ts3);
+            rsDateTime2 = (SQLServerResultSet) psCastDateTime2.executeQuery();
+            
+            rsDTO.next();
+            rsDTO2.next();
+            rsDateTime2.next();
             
             psTable = (SQLServerPreparedStatement) conn.prepareStatement("INSERT INTO #tmp values (?)");
         } catch (SQLException e) {
@@ -107,55 +117,55 @@ public class MyBenchmark {
         }
     }
 
-    /**
-     * Tests scenario with set / execute / get, using timestamp from before Gregorian Cutoff
-     * 
-     * @param bh
-     */
-    @Benchmark
-    public void testExecuteCastBeforeGregorian(Blackhole bh) throws Exception {
-        bh.consume(testExecuteCast(conn, psCast, ts));
-    }
-
-    /**
-     * Tests scenario with set / execute / get, using timestamp from before Gregorian Cutoff
-     * 
-     * @param bh
-     */
-    @Benchmark
-    public void testExecuteTableBeforeGregorian(Blackhole bh) throws Exception {
-        bh.consume(testExecuteTable(conn, psTable, ts));
-    }
+//    /**
+//     * Tests scenario with set / execute / get, using timestamp from before Gregorian Cutoff
+//     * 
+//     * @param bh
+//     */
+//    @Benchmark
+//    public void testExecuteCastBeforeGregorian(Blackhole bh) throws Exception {
+//        bh.consume(testExecuteCast(conn, psCast, ts));
+//    }
+//
+//    /**
+//     * Tests scenario with set / execute / get, using timestamp from before Gregorian Cutoff
+//     * 
+//     * @param bh
+//     */
+//    @Benchmark
+//    public void testExecuteTableBeforeGregorian(Blackhole bh) throws Exception {
+//        bh.consume(testExecuteTable(conn, psTable, ts));
+//    }
     
-    /**
-     * Tests scenario with set / execute / get, using timestamp from after Gregorian Cutoff
-     * 
-     * @param bh
-     */
-    @Benchmark
-    public void testExecuteCastAfterGregorian(Blackhole bh) throws Exception {
-        bh.consume(testExecuteCast(conn, psCast, ts2));
-    }
-
-    /**
-     * Tests scenario with set / execute / get, using timestamp from after Gregorian Cutoff
-     * 
-     * @param bh
-     */
-    @Benchmark
-    public void testExecuteTableAfterGregorian(Blackhole bh) throws Exception {
-        bh.consume(testExecuteTable(conn, psTable, ts2));
-    }
-
-    /**
-     * Tests scenario with set.
-     * 
-     * @param bh
-     */
-    @Benchmark
-    public void testSetTimestamp(Blackhole bh) throws Exception {
-        bh.consume(testSetTimestamp());
-    }
+//    /**
+//     * Tests scenario with set / execute / get, using timestamp from after Gregorian Cutoff
+//     * 
+//     * @param bh
+//     */
+//    @Benchmark
+//    public void testExecuteCastAfterGregorian(Blackhole bh) throws Exception {
+//        bh.consume(testExecuteCast(conn, psCast, ts2));
+//    }
+//
+//    /**
+//     * Tests scenario with set / execute / get, using timestamp from after Gregorian Cutoff
+//     * 
+//     * @param bh
+//     */
+//    @Benchmark
+//    public void testExecuteTableAfterGregorian(Blackhole bh) throws Exception {
+//        bh.consume(testExecuteTable(conn, psTable, ts2));
+//    }
+//
+//    /**
+//     * Tests scenario with set.
+//     * 
+//     * @param bh
+//     */
+//    @Benchmark
+//    public void testSetTimestamp(Blackhole bh) throws Exception {
+//        bh.consume(testSetTimestamp());
+//    }
 
     /**
      * Tests scenario with get, using timestamp from before Gregorian Cutoff
@@ -164,7 +174,7 @@ public class MyBenchmark {
      */
     @Benchmark
     public void testGetTimestampBeforeGregorian(Blackhole bh) throws Exception {
-        bh.consume(testGetTimestamp(rs));
+        bh.consume(testGetTimestamp(rsDTO));
     }
     
     /**
@@ -174,19 +184,19 @@ public class MyBenchmark {
      */
     @Benchmark
     public void testGetTimestampAfterGregorian(Blackhole bh) throws Exception {
-        bh.consume(testGetTimestamp(rs2));
+        bh.consume(testGetTimestamp(rsDTO2));
     }
 
 
-    /**
-     * Tests scenario with set.
-     * 
-     * @param bh
-     */
-    @Benchmark
-    public void testSetDTO(Blackhole bh) throws Exception {
-        bh.consume(testSetDTO());
-    }
+//    /**
+//     * Tests scenario with set.
+//     * 
+//     * @param bh
+//     */
+//    @Benchmark
+//    public void testSetDTO(Blackhole bh) throws Exception {
+//        bh.consume(testSetDTO());
+//    }
 
     /**
      * Tests scenario with get, using timestamp from before Gregorian Cutoff
@@ -195,7 +205,7 @@ public class MyBenchmark {
      */
     @Benchmark
     public void testGetDTOBeforeGregorian(Blackhole bh) throws Exception {
-        bh.consume(testGetDTO(rs));
+        bh.consume(testGetDTO(rsDTO));
     }
     
     /**
@@ -205,7 +215,27 @@ public class MyBenchmark {
      */
     @Benchmark
     public void testGetDTOAfterGregorian(Blackhole bh) throws Exception {
-        bh.consume(testGetDTO(rs2));
+        bh.consume(testGetDTO(rsDTO2));
+    }
+    
+    /**
+     * Tests scenario with get, using timestamp within Daylight Savings Time
+     * 
+     * @param bh
+     */
+    @Benchmark
+    public void testGetDateTime2InDST(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsDateTime2));
+    }
+    
+    /**
+     * Tests scenario with get, using timestamp within Daylight Savings Time, with a Calendar from a different timezone
+     * 
+     * @param bh
+     */
+    @Benchmark
+    public void testGetDateTime2InDSTWithCalendar(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestampCalendar(rsDateTime2, cal));
     }
 
     // /**
@@ -352,16 +382,20 @@ public class MyBenchmark {
     }
 
     private int testSetTimestamp() throws Exception {
-        psCast.setTimestamp(1, ts);
+        psCastDTO.setTimestamp(1, ts);
         return 0;
     }
 
     private Timestamp testGetTimestamp(SQLServerResultSet rs) throws Exception {
         return rs.getTimestamp(1);
     }
+    
+    private Timestamp testGetTimestampCalendar(SQLServerResultSet rs, Calendar cal) throws Exception {
+        return rs.getTimestamp(1, cal);
+    }
 
     private int testSetDTO() throws Exception {
-        psCast.setDateTimeOffset(1, dto);
+        psCastDTO.setDateTimeOffset(1, dto);
         return 0;
     }
 
