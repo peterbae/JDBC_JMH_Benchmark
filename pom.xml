@@ -69,8 +69,8 @@ THE POSSIBILITY OF SUCH DAMAGE.
 		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
-			<!-- mvn install:install-file -Dfile=mssql-jdbc-caltozdt.jar -DgroupId=com.microsoft.sqlserver -DartifactId=mssql-jdbc -Dpackaging=jar -Dversion=8.1.1.jre13-preview-calToZDT -->
-			<version>8.1.1.jre13-preview-calToZDT</version>  <!-- Modify the version to "8.1.1.jre13-preview-calToZDT" to use the custom jar for JMH runs -->
+			<!-- mvn install:install-file -Dfile=mssql-jdbc-caltozdt.jar -DgroupId=com.microsoft.sqlserver -DartifactId=mssql-jdbc -Dpackaging=jar -Dversion=8.1.1.jre13-preview-calToLDT -->
+			<version>8.1.1.jre13-preview-calToLDT</version>  <!-- Modify the version to "8.1.1.jre13-preview-calToZDT" to use the custom jar for JMH runs -->
 		</dependency>
     </dependencies>
 

@@ -66,6 +66,7 @@ public class MyBenchmark {
     private static java.sql.Timestamp ts2 = Timestamp.valueOf("2019-9-24 15:07:09.081");
     private static java.sql.Timestamp ts3 = Timestamp.valueOf("2004-04-06 02:00:00.0");
     private static java.sql.Timestamp ts4 = Timestamp.valueOf("2004-11-15 02:00:00.0");
+    private static java.sql.Timestamp tsCurrent = new Timestamp(System.currentTimeMillis());
     private static DateTimeOffset dto = DateTimeOffset.valueOf(ts, 75);
     private static String timezone = "Pacific/Honolulu";
     private static Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(timezone));
@@ -81,13 +82,27 @@ public class MyBenchmark {
 
     private static Connection conn;
     private static SQLServerStatement st;
+    
     private static SQLServerPreparedStatement psCastDTO;
-    private static SQLServerPreparedStatement psCastDTO2;
+    private static SQLServerPreparedStatement psCastDate;
+    private static SQLServerPreparedStatement psCastSmallDateTime;
+    private static SQLServerPreparedStatement psCastDateTime;
+    private static SQLServerPreparedStatement psCastDateTime2;
+    private static SQLServerPreparedStatement psCastTime;
+    
+    private static SQLServerPreparedStatement psCastDateTime2Pregregorian;
     private static SQLServerPreparedStatement psCastDateTime2DST;
     private static SQLServerPreparedStatement psCastDateTime2NotDST;
     private static SQLServerPreparedStatement psTable;
+    
     private static SQLServerResultSet rsDTO;
-    private static SQLServerResultSet rsDTO2;
+    private static SQLServerResultSet rsDate;
+    private static SQLServerResultSet rsSmallDateTime;
+    private static SQLServerResultSet rsDateTime;
+    private static SQLServerResultSet rsDateTime2;
+    private static SQLServerResultSet rsTime;
+    
+    private static SQLServerResultSet rsDateTime2Pregregorian;
     private static SQLServerResultSet rsDateTime2DST;
     private static SQLServerResultSet rsDateTime2NotDST;
 
@@ -96,16 +111,39 @@ public class MyBenchmark {
             conn = DriverManager.getConnection(connectionUrl + ";sendTimeAsDatetime=true");
             st = (SQLServerStatement) conn.createStatement();
             st.execute("CREATE TABLE #tmp (dt datetime2)");
+            
             psCastDTO = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIMEOFFSET)");
-            psCastDTO2 = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIMEOFFSET)");
+            psCastDate = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATE)");
+            psCastSmallDateTime = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS SMALLDATETIME)");
+            psCastDateTime = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIME)");
+            psCastDateTime2 = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIME2)");
+            psCastTime = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS TIME)");
+            
+            
+            psCastDateTime2Pregregorian = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIME2)");
             psCastDateTime2DST = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIME2)");
             psCastDateTime2NotDST = (SQLServerPreparedStatement) conn.prepareStatement("SELECT CAST(? AS DATETIME2)");
             
-            psCastDTO.setTimestamp(1, ts);
+            psCastDTO.setTimestamp(1, tsCurrent);
             rsDTO = (SQLServerResultSet) psCastDTO.executeQuery();
             
-            psCastDTO2.setTimestamp(1, ts2);
-            rsDTO2 = (SQLServerResultSet) psCastDTO2.executeQuery();
+            psCastDate.setTimestamp(1, tsCurrent);
+            rsDate = (SQLServerResultSet) psCastDate.executeQuery();
+            
+            psCastSmallDateTime.setTimestamp(1, tsCurrent);
+            rsSmallDateTime = (SQLServerResultSet) psCastSmallDateTime.executeQuery();
+            
+            psCastDateTime.setTimestamp(1, tsCurrent);
+            rsDateTime = (SQLServerResultSet) psCastDateTime.executeQuery();
+            
+            psCastDateTime2.setTimestamp(1, tsCurrent);
+            rsDateTime2 = (SQLServerResultSet) psCastDateTime2.executeQuery();
+            
+            psCastTime.setTimestamp(1, tsCurrent);
+            rsTime = (SQLServerResultSet) psCastTime.executeQuery();
+            
+            psCastDateTime2Pregregorian.setTimestamp(1, ts);
+            rsDateTime2Pregregorian = (SQLServerResultSet) psCastDateTime2Pregregorian.executeQuery();
             
             psCastDateTime2DST.setTimestamp(1, ts3);
             rsDateTime2DST = (SQLServerResultSet) psCastDateTime2DST.executeQuery();
@@ -114,7 +152,13 @@ public class MyBenchmark {
             rsDateTime2NotDST = (SQLServerResultSet) psCastDateTime2NotDST.executeQuery();
             
             rsDTO.next();
-            rsDTO2.next();
+            rsDate.next();
+            rsSmallDateTime.next();
+            rsDateTime.next();
+            rsDateTime2.next();
+            rsTime.next();
+            
+            rsDateTime2Pregregorian.next();
             rsDateTime2DST.next();
             rsDateTime2NotDST.next();
             
@@ -124,7 +168,387 @@ public class MyBenchmark {
             e.printStackTrace();
         }
     }
-
+    
+    // Date
+    
+    @Benchmark
+    public void testGetDateAsDate(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsDate));
+    }
+    
+    @Benchmark
+    public void testGetDateAsDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsDate));
+    }
+//    
+//    @Benchmark
+//    public void testGetDateAsDTO(Blackhole bh) throws Exception {
+//        bh.consume(testGetDTO(rsDate));
+//    }
+    
+    @Benchmark
+    public void testGetDateAsSmallDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsDate));
+    }
+    
+    @Benchmark
+    public void testGetDateAsTimestamp(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsDate));
+    }
+    
+    @Benchmark
+    public void testGetDateAsString(Blackhole bh) throws Exception {
+        bh.consume(testGetString(rsDate));
+    }
+    
+    @Benchmark
+    public void testGetDateAsLocalDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetLocalDateTime(rsDate));
+    }
+    
+    // Date with Cal
+    
+    @Benchmark
+    public void testGetDateAsDateCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsDate, cal));
+    }
+    
+    @Benchmark
+    public void testGetDateAsDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsDate, cal));
+    }
+    
+    @Benchmark
+    public void testGetDateAsSmallDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsDate, cal));
+    }
+    
+    @Benchmark
+    public void testGetDateAsTimestampCal(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsDate, cal));
+    }
+    
+    // DateTime
+    
+    @Benchmark
+    public void testGetDateTimeAsDate(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsDateTime));
+    }
+    
+    @Benchmark
+    public void testGetDateTimeAsDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsDateTime));
+    }
+//    
+//    @Benchmark
+//    public void testGetDateTimeAsDTO(Blackhole bh) throws Exception {
+//        bh.consume(testGetDTO(rsDateTime));
+//    }
+    
+    @Benchmark
+    public void testGetDateTimeAsSmallDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsDateTime));
+    }
+    
+    @Benchmark
+    public void testGetDateTimeAsTimestamp(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsDateTime));
+    }
+    
+    @Benchmark
+    public void testGetDateTimeAsString(Blackhole bh) throws Exception {
+        bh.consume(testGetString(rsDateTime));
+    }
+    
+    @Benchmark
+    public void testGetDateTimeAsLocalDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetLocalDateTime(rsDateTime));
+    }
+    
+    // DateTime with Cal
+    
+    @Benchmark
+    public void testGetDateTimeAsDateCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsDateTime, cal));
+    }
+    
+    @Benchmark
+    public void testGetDateTimeAsDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsDateTime, cal));
+    }
+    
+    @Benchmark
+    public void testGetDateTimeAsSmallDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsDateTime, cal));
+    }
+    
+    @Benchmark
+    public void testGetDateTimeAsTimestampCal(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsDateTime, cal));
+    }
+    
+    // DateTime2
+    
+    @Benchmark
+    public void testGetDateTime2AsDate(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsDateTime2));
+    }
+    
+    @Benchmark
+    public void testGetDateTime2AsDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsDateTime2));
+    }
+//    
+//    @Benchmark
+//    public void testGetDateTime2AsDTO(Blackhole bh) throws Exception {
+//        bh.consume(testGetDTO(rsDateTime2));
+//    }
+    
+    @Benchmark
+    public void testGetDateTime2AsSmallDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsDateTime2));
+    }
+    
+    @Benchmark
+    public void testGetDateTime2AsTimestamp(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsDateTime2));
+    }
+    
+    @Benchmark
+    public void testGetDateTime2AsString(Blackhole bh) throws Exception {
+        bh.consume(testGetString(rsDateTime2));
+    }
+    
+    @Benchmark
+    public void testGetDateTime2AsLocalDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetLocalDateTime(rsDateTime2));
+    }
+    
+    @Benchmark
+    public void testGetDateTime2AsDateTimePregregorian(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsDateTime2Pregregorian));
+    }
+    
+    // DateTime2 with Cal
+    
+    @Benchmark
+    public void testGetDateTime2AsDateCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsDateTime2, cal));
+    }
+    
+    @Benchmark
+    public void testGetDateTime2AsDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsDateTime2, cal));
+    }
+    
+    @Benchmark
+    public void testGetDateTime2AsSmallDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsDateTime2, cal));
+    }
+    
+    @Benchmark
+    public void testGetDateTime2AsTimestampCal(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsDateTime2, cal));
+    }
+    
+    @Benchmark
+    public void testGetDateTime2AsDateTimePregregorianCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsDateTime2Pregregorian, cal));
+    }
+    
+    // DTO
+    
+    @Benchmark
+    public void testGetDTOAsDate(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsDTO));
+    }
+    
+    @Benchmark
+    public void testGetDTOAsDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsDTO));
+    }
+    
+    @Benchmark
+    public void testGetDTOAsDTO(Blackhole bh) throws Exception {
+        bh.consume(testGetDTO(rsDTO));
+    }
+    
+    @Benchmark
+    public void testGetDTOAsSmallDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsDTO));
+    }
+    
+    @Benchmark
+    public void testGetDTOAsTimestamp(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsDTO));
+    }
+    
+    @Benchmark
+    public void testGetDTOAsString(Blackhole bh) throws Exception {
+        bh.consume(testGetString(rsDTO));
+    }
+    
+    @Benchmark
+    public void testGetDTOAsLocalDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetLocalDateTime(rsDTO));
+    }    
+    
+    // DTO with Cal
+    
+    @Benchmark
+    public void testGetDTOAsDateCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsDTO, cal));
+    }
+    
+    @Benchmark
+    public void testGetDTOAsDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsDTO, cal));
+    }
+    
+    @Benchmark
+    public void testGetDTOAsSmallDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsDTO, cal));
+    }
+    
+    @Benchmark
+    public void testGetDTOAsTimestampCal(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsDTO, cal));
+    }
+    
+    // SmallDateTime
+    
+    @Benchmark
+    public void testGetSmallDateTimeAsDate(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsSmallDateTime));
+    }
+    
+    @Benchmark
+    public void testGetSmallDateTimeAsDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsSmallDateTime));
+    }
+    
+    @Benchmark
+    public void testGetSmallDateTimeAsDTO(Blackhole bh) throws Exception {
+        bh.consume(testGetDTO(rsSmallDateTime));
+    }
+    
+    @Benchmark
+    public void testGetSmallDateTimeAsSmallDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsSmallDateTime));
+    }
+    
+    @Benchmark
+    public void testGetSmallDateTimeAsTimestamp(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsSmallDateTime));
+    }
+    
+    @Benchmark
+    public void testGetSmallDateTimeAsString(Blackhole bh) throws Exception {
+        bh.consume(testGetString(rsSmallDateTime));
+    }
+    
+    @Benchmark
+    public void testGetSmallDateTimeAsLocalDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetLocalDateTime(rsSmallDateTime));
+    }
+    
+    // SmallDateTime with Cal
+    
+    @Benchmark
+    public void testGetSmallDateTimeAsDateCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsSmallDateTime, cal));
+    }
+    
+    @Benchmark
+    public void testGetSmallDateTimeAsDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsSmallDateTime, cal));
+    }
+    
+    @Benchmark
+    public void testGetSmallDateTimeAsSmallDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsSmallDateTime, cal));
+    }
+    
+    @Benchmark
+    public void testGetSmallDateTimeAsTimestampCal(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsSmallDateTime, cal));
+    }
+    
+    // Time
+    
+    @Benchmark
+    public void testGetTimeAsDate(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsTime));
+    }
+    
+    @Benchmark
+    public void testGetTimeAsDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsTime));
+    }
+    
+    @Benchmark
+    public void testGetTimeAsDTO(Blackhole bh) throws Exception {
+        bh.consume(testGetDTO(rsTime));
+    }
+    
+    @Benchmark
+    public void testGetTimeAsSmallDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsTime));
+    }
+    
+    @Benchmark
+    public void testGetTimeAsTimestamp(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsTime));
+    }
+    
+    @Benchmark
+    public void testGetTimeAsString(Blackhole bh) throws Exception {
+        bh.consume(testGetString(rsTime));
+    }
+    
+    @Benchmark
+    public void testGetTimeAsLocalDateTime(Blackhole bh) throws Exception {
+        bh.consume(testGetLocalDateTime(rsTime));
+    }
+    
+    // Time with Cal
+    
+    @Benchmark
+    public void testGetTimeAsDateCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDate(rsTime, cal));
+    }
+    
+    @Benchmark
+    public void testGetTimeAsDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetDateTime(rsTime, cal));
+    }
+    
+    @Benchmark
+    public void testGetTimeAsSmallDateTimeCal(Blackhole bh) throws Exception {
+        bh.consume(testGetSmallDateTime(rsTime, cal));
+    }
+    
+    @Benchmark
+    public void testGetTimeAsTimestampCal(Blackhole bh) throws Exception {
+        bh.consume(testGetTimestamp(rsTime, cal));
+    }
+    
+    
+//    @Benchmark
+//    public void testGetTimeAsTimestamp(Blackhole bh) throws Exception {
+//        bh.consume(testGetTimestamp(rsTime));
+//    }
+//    
+//    @Benchmark
+//    public void testGetDateTime2AsString(Blackhole bh) throws Exception {
+//        bh.consume(testGetString(rsDateTime2));
+//    }
+//    
+//    @Benchmark
+//    public void testGetDateTime2AsTime(Blackhole bh) throws Exception {
+//        bh.consume(testGetTime(rsDateTime2));
+//    }
+    
 //    /**
 //     * Tests scenario with set / execute / get, using timestamp from before Gregorian Cutoff
 //     * 
@@ -216,15 +640,15 @@ public class MyBenchmark {
 //        bh.consume(testGetDTO(rsDTO));
 //    }
     
-    /**
-     * Tests scenario with get, using timestamp from after Gregorian Cutoff
-     * 
-     * @param bh
-     */
-    @Benchmark
-    public void testGetDTOAfterGregorian(Blackhole bh) throws Exception {
-        bh.consume(testGetDTO(rsDTO2));
-    }
+//    /**
+//     * Tests scenario with get, using timestamp from after Gregorian Cutoff
+//     * 
+//     * @param bh
+//     */
+//    @Benchmark
+//    public void testGetDTOAfterGregorian(Blackhole bh) throws Exception {
+//        bh.consume(testGetDTO(rsDTO2));
+//    }
     
 //    /**
 //     * Tests scenario with get, using timestamp within Daylight Savings Time
@@ -424,21 +848,57 @@ public class MyBenchmark {
         return 0;
     }
 
-    private Timestamp testGetTimestamp(SQLServerResultSet rs) throws Exception {
-        return rs.getTimestamp(1);
-    }
-    
-    private Timestamp testGetTimestampCalendar(SQLServerResultSet rs, Calendar cal) throws Exception {
-        return rs.getTimestamp(1, cal);
-    }
-
     private int testSetDTO() throws Exception {
         psCastDTO.setDateTimeOffset(1, dto);
         return 0;
     }
-
+    
     private DateTimeOffset testGetDTO(SQLServerResultSet rs) throws Exception {
         return rs.getDateTimeOffset(1);
+    }
+    
+    private java.sql.Date testGetDate(SQLServerResultSet rs, Calendar cal) throws Exception {
+        return rs.getDate(1, cal);
+    }
+    
+    private java.sql.Date testGetDate(SQLServerResultSet rs) throws Exception {
+        return rs.getDate(1);
+    }
+    
+    private java.sql.Timestamp testGetDateTime(SQLServerResultSet rs) throws Exception {
+        return rs.getDateTime(1);
+    }
+    
+    private java.sql.Timestamp testGetDateTime(SQLServerResultSet rs, Calendar cal) throws Exception {
+        return rs.getDateTime(1, cal);
+    }
+    
+    private java.sql.Timestamp testGetSmallDateTime(SQLServerResultSet rs) throws Exception {
+        return rs.getSmallDateTime(1);
+    }
+    
+    private java.sql.Timestamp testGetSmallDateTime(SQLServerResultSet rs, Calendar cal) throws Exception {
+        return rs.getSmallDateTime(1, cal);
+    }
+    
+    private java.sql.Time testGetTime(SQLServerResultSet rs) throws Exception {
+        return rs.getTime(1);
+    }
+    
+    private Timestamp testGetTimestamp(SQLServerResultSet rs) throws Exception {
+        return rs.getTimestamp(1);
+    }
+    
+    private Timestamp testGetTimestamp(SQLServerResultSet rs, Calendar cal) throws Exception {
+        return rs.getTimestamp(1, cal);
+    }
+    
+    private String testGetString(SQLServerResultSet rs) throws Exception {
+        return rs.getString(1);
+    }
+    
+    private LocalDateTime testGetLocalDateTime(SQLServerResultSet rs) throws Exception {
+        return rs.getObject(1, LocalDateTime.class);
     }
 
     private Calendar testCreateCalendarFromTimestampInternal() {
